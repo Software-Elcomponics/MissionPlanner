@@ -5990,6 +5990,76 @@ namespace MissionPlanner.GCSViews
             }
         }
 
+        private double DMSToDecimal(double deg, double min, double sec)
+        {
+            double sign = deg < 0 ? -1 : 1;
+
+            return sign *
+                   (Math.Abs(deg) +
+                    (min / 60.0) +
+                    (sec / 3600.0));
+        }
+
+        private void flyToDMSToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var location = "";
+            InputBox.Show("Enter Fly To DMS", "Please enter the DMS 'latDeg; latMin; latSec; lonDeg ;lonMin; lonSec; alt'", ref location);
+
+            byte frame = (byte)MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT;
+            if (!MainV2.comPort.MAV.GuidedMode.Equals(new MAVLink.mavlink_mission_item_int_t()))
+            {
+                frame = MainV2.comPort.MAV.GuidedMode.frame;
+            }
+            else if (Settings.Instance.ContainsKey("guided_alt_frame"))
+            {
+                byte.TryParse(Settings.Instance["guided_alt_frame"], out frame);
+            }
+
+            var split = location.Split(';');
+
+            if (split.Length == 7)
+            {
+                double lat = DMSToDecimal(
+                    double.Parse(split[0], CultureInfo.InvariantCulture),
+                    double.Parse(split[1], CultureInfo.InvariantCulture),
+                    double.Parse(split[2], CultureInfo.InvariantCulture));
+
+                double lng = DMSToDecimal(
+                    double.Parse(split[3], CultureInfo.InvariantCulture),
+                    double.Parse(split[4], CultureInfo.InvariantCulture),
+                    double.Parse(split[5], CultureInfo.InvariantCulture));
+
+                float alt = float.Parse(split[6], CultureInfo.InvariantCulture);
+
+                var plla = new PointLatLngAlt(lat, lng, alt);
+
+                Locationwp gotohere = new Locationwp();
+
+                gotohere.id = (ushort)MAVLink.MAV_CMD.WAYPOINT;
+                gotohere.alt = (float)plla.Alt / CurrentState.multiplieralt;
+                gotohere.lat = plla.Lat;
+                gotohere.lng = plla.Lng;
+                gotohere.frame = frame;
+
+                try
+                {
+                    MainV2.comPort.setGuidedModeWP(gotohere);
+                }
+                catch (Exception ex)
+                {
+                    CustomMessageBox.Show(
+                        Strings.CommandFailed + ex.Message,
+                        Strings.ERROR);
+                }
+            }
+            else
+            {
+                CustomMessageBox.Show(
+                    "Format:\nLatDeg;LatMin;LatSec;LonDeg;LonMin;LonSec;Alt",
+                    Strings.ERROR);
+            }
+        }
+
         private void poiatcoordsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var location = "";

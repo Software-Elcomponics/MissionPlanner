@@ -5365,6 +5365,12 @@
   <data name="flyToCoordsToolStripMenuItem.Text" xml:space="preserve">
     <value>Fly To Coords</value>
   </data>
+	<data name="flyToDMSToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+		<value>187, 22</value>
+	</data>
+    <data name="flyToDMSToolStripMenuItem.Text" xml:space="preserve">
+    <value>Fly To DMS</value>
+  </data>
   <data name="deleteToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>121, 22</value>
   </data>

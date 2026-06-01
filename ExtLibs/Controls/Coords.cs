@@ -78,7 +78,8 @@ namespace MissionPlanner.Controls
         {
             GEO,
             UTM,
-            MGRS
+            MGRS,
+            DMS
         }
 
         public Coords()
@@ -89,6 +90,26 @@ namespace MissionPlanner.Controls
             this.DoubleBuffered = true;
             CMB_coordsystem.DataSource = Enum.GetNames(typeof(CoordsSystems));
             AltSource = "";
+        }
+
+        private string DecimalToDMS(double value, bool isLat)
+        {
+            string hemi;
+
+            if (isLat)
+                hemi = value >= 0 ? "N" : "S";
+            else
+                hemi = value >= 0 ? "E" : "W";
+
+            value = Math.Abs(value);
+
+            int deg = (int)value;
+            double minFloat = (value - deg) * 60;
+
+            int min = (int)minFloat;
+            double sec = (minFloat - min) * 60;
+
+            return $"{deg}° {min}' {sec:F2}\" {hemi}";
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -156,7 +177,42 @@ namespace MissionPlanner.Controls
                     }
                 }
                 catch { }
-            }  
+            }
+            else if (System == CoordsSystems.DMS.ToString())
+            {
+                try
+                {
+                    string lat = DecimalToDMS(Lat, true);
+                    string lng = DecimalToDMS(Lng, false);
+
+                    if (Vertical)
+                    {
+                        e.Graphics.DrawString(
+                            lat + "\n" + lng + "\n" + Alt.ToString("0.00") + AltUnit,
+                            this.Font,
+                            new SolidBrush(this.ForeColor),
+                            text,
+                            StringFormat.GenericDefault);
+
+                        e.Graphics.DrawString(
+                            AltSource,
+                            this.Font,
+                            new SolidBrush(this.ForeColor),
+                            new PointF(CMB_coordsystem.Left, CMB_coordsystem.Bottom + 4),
+                            StringFormat.GenericDefault);
+                    }
+                    else
+                    {
+                        e.Graphics.DrawString(
+                            lat + "   " + lng + "   " + Alt.ToString("0.00") + AltUnit,
+                            this.Font,
+                            new SolidBrush(this.ForeColor),
+                            text,
+                            StringFormat.GenericDefault);
+                    }
+                }
+                catch {}
+            }
         }
 
         private void CMB_coordsystem_SelectedIndexChanged(object sender, EventArgs e)

@@ -197,6 +197,7 @@ namespace MissionPlanner.GCSViews
             this.goHereToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.flyToHereAltToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.flyToCoordsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.flyToDMSToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addPoiToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2519,6 +2520,7 @@ namespace MissionPlanner.GCSViews
             this.goHereToolStripMenuItem,
             this.flyToHereAltToolStripMenuItem,
             this.flyToCoordsToolStripMenuItem,
+            this.flyToDMSToolStripMenuItem,
             this.addPoiToolStripMenuItem,
             this.pointCameraHereToolStripMenuItem,
             this.PointCameraCoordsToolStripMenuItem1,
@@ -2549,6 +2551,12 @@ namespace MissionPlanner.GCSViews
             this.flyToCoordsToolStripMenuItem.Name = "flyToCoordsToolStripMenuItem";
             resources.ApplyResources(this.flyToCoordsToolStripMenuItem, "flyToCoordsToolStripMenuItem");
             this.flyToCoordsToolStripMenuItem.Click += new System.EventHandler(this.flyToCoordsToolStripMenuItem_Click);
+            //
+            // flyToDMSToolStripMenuItem
+            //
+            this.flyToDMSToolStripMenuItem.Name = "flyToDMSToolStripMenuItem";
+            resources.ApplyResources(this.flyToDMSToolStripMenuItem, "flyToDMSToolStripMenuItem");
+            this.flyToDMSToolStripMenuItem.Click += new System.EventHandler(this.flyToDMSToolStripMenuItem_Click);
             // 
             // addPoiToolStripMenuItem
             // 
@@ -3163,6 +3171,7 @@ namespace MissionPlanner.GCSViews
         private Controls.QuickView quickView5;
         private System.Windows.Forms.ToolStripMenuItem poiatcoordsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem flyToCoordsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem flyToDMSToolStripMenuItem;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.ToolStripMenuItem setBatteryCellCountToolStripMenuItem;
