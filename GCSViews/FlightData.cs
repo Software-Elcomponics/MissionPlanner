@@ -5990,23 +5990,54 @@ namespace MissionPlanner.GCSViews
             }
         }
 
-        private double DMSToDecimal(double deg, double min, double sec)
+        private double DMSToDecimal(int deg, int min, double sec, char hemi)
         {
-            double sign = deg < 0 ? -1 : 1;
+            double dec = deg + (min / 60.0) + (sec / 3600.0);
 
-            return sign *
-                   (Math.Abs(deg) +
-                    (min / 60.0) +
-                    (sec / 3600.0));
+            if (hemi == 'S' || hemi == 'W')
+                dec *= -1;
+
+            return dec;
+        }
+
+        private PointLatLngAlt ParseDMS(string input, float alt)
+        {
+            var regex = new System.Text.RegularExpressions.Regex(
+                @"(\d+)°(\d+)'([\d\.]+)""([NS])\s+(\d+)°(\d+)'([\d\.]+)""([EW])",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            var match = regex.Match(input.Trim());
+
+            if (!match.Success)
+                throw new Exception(
+                    "Format example:\n35°21'44.0\"S 149°09'54.3\"E");
+
+            double lat = DMSToDecimal(
+                int.Parse(match.Groups[1].Value),
+                int.Parse(match.Groups[2].Value),
+                double.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture),
+                char.ToUpper(match.Groups[4].Value[0]));
+
+            double lon = DMSToDecimal(
+                int.Parse(match.Groups[5].Value),
+                int.Parse(match.Groups[6].Value),
+                double.Parse(match.Groups[7].Value, CultureInfo.InvariantCulture),
+                char.ToUpper(match.Groups[8].Value[0]));
+
+            return new PointLatLngAlt(lat, lon, alt);
         }
 
         private void flyToDMSToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var location = "";
-            InputBox.Show("Enter Fly To DMS", "Please enter the DMS 'latDeg; latMin; latSec; lonDeg ;lonMin; lonSec; alt'", ref location);
+            InputBox.Show("Enter Fly To DMS", "Example:\n35°21'44.0\"S 149°09'54.3\"E", ref location);
 
             byte frame = (byte)MAVLink.MAV_FRAME.GLOBAL_RELATIVE_ALT;
-            if (!MainV2.comPort.MAV.GuidedMode.Equals(new MAVLink.mavlink_mission_item_int_t()))
+
+            if (string.IsNullOrWhiteSpace(location))
+                return;
+
+            else if (!MainV2.comPort.MAV.GuidedMode.Equals(new MAVLink.mavlink_mission_item_int_t()))
             {
                 frame = MainV2.comPort.MAV.GuidedMode.frame;
             }
@@ -6014,50 +6045,34 @@ namespace MissionPlanner.GCSViews
             {
                 byte.TryParse(Settings.Instance["guided_alt_frame"], out frame);
             }
-
-            var split = location.Split(';');
-
-            if (split.Length == 7)
+            else
             {
-                double lat = DMSToDecimal(
-                    double.Parse(split[0], CultureInfo.InvariantCulture),
-                    double.Parse(split[1], CultureInfo.InvariantCulture),
-                    double.Parse(split[2], CultureInfo.InvariantCulture));
+                CustomMessageBox.Show(
+                    "Format Example:\n35°21'44.0\"S 149°09'54.3\"E",
+                    Strings.ERROR);
+            }
 
-                double lng = DMSToDecimal(
-                    double.Parse(split[3], CultureInfo.InvariantCulture),
-                    double.Parse(split[4], CultureInfo.InvariantCulture),
-                    double.Parse(split[5], CultureInfo.InvariantCulture));
+            try
+            {
+                float alt = (float)MainV2.comPort.MAV.cs.alt;
 
-                float alt = float.Parse(split[6], CultureInfo.InvariantCulture);
-
-                var plla = new PointLatLngAlt(lat, lng, alt);
+                var plla = ParseDMS(location, alt);
 
                 Locationwp gotohere = new Locationwp();
 
                 gotohere.id = (ushort)MAVLink.MAV_CMD.WAYPOINT;
-                gotohere.alt = (float)plla.Alt / CurrentState.multiplieralt;
+                gotohere.alt = alt;
                 gotohere.lat = plla.Lat;
                 gotohere.lng = plla.Lng;
                 gotohere.frame = frame;
 
-                try
-                {
-                    MainV2.comPort.setGuidedModeWP(gotohere);
-                }
-                catch (Exception ex)
-                {
-                    CustomMessageBox.Show(
-                        Strings.CommandFailed + ex.Message,
-                        Strings.ERROR);
-                }
+                MainV2.comPort.setGuidedModeWP(gotohere);
             }
-            else
+            catch (Exception ex)
             {
-                CustomMessageBox.Show(
-                    "Format:\nLatDeg;LatMin;LatSec;LonDeg;LonMin;LonSec;Alt",
-                    Strings.ERROR);
+                CustomMessageBox.Show(ex.Message, Strings.ERROR);
             }
+
         }
 
         private void poiatcoordsToolStripMenuItem_Click(object sender, EventArgs e)
